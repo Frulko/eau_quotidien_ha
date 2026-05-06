@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Eau Quotidien",
+        "description": "Connectez votre compte Eau Quotidien (plateforme Nogema — Grand Chambéry et autres).",
+        "data": {
+          "email": "Email",
+          "password": "Mot de passe",
+          "base_url": "URL de base (avancé)"
+        }
+      },
+      "meter": {
+        "title": "Choix du compteur",
+        "description": "Plusieurs compteurs ont été détectés sur votre compte. Choisissez celui à ajouter (vous pourrez ajouter les autres plus tard).",
+        "data": {
+          "meter_id": "Compteur"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Email ou mot de passe incorrect.",
+      "cannot_connect": "Impossible de joindre le serveur.",
+      "no_meters": "Aucun compteur détecté sur ce compte.",
+      "unknown": "Erreur inattendue. Consultez les logs."
+    },
+    "abort": {
+      "already_configured": "Ce compteur est déjà configuré."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "index": { "name": "Index" },
+      "consumption_today": { "name": "Consommation aujourd'hui" },
+      "consumption_average": { "name": "Consommation moyenne" },
+      "threshold_high": { "name": "Seuil d'alerte haut" },
+      "threshold_low": { "name": "Seuil d'alerte bas" }
+    }
+  }
+}

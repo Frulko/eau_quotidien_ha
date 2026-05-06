@@ -1,0 +1,12 @@
+{
+  "domain": "eau_quotidien",
+  "name": "Eau Quotidien (Nogema)",
+  "version": "0.1.0",
+  "documentation": "https://github.com/frulko/eau-quotidien-ha",
+  "issue_tracker": "https://github.com/frulko/eau-quotidien-ha/issues",
+  "codeowners": [],
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "integration_type": "device",
+  "requirements": []
+}

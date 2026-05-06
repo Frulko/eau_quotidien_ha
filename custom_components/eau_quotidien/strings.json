@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Eau Quotidien",
+        "description": "Connect your Eau Quotidien account (Nogema platform — Grand Chambéry and others).",
+        "data": {
+          "email": "Email",
+          "password": "Password",
+          "base_url": "Base URL (advanced)"
+        }
+      },
+      "meter": {
+        "title": "Choose a meter",
+        "description": "Several meters were found on this account. Pick the one to add (you can add the others later).",
+        "data": {
+          "meter_id": "Meter"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password.",
+      "cannot_connect": "Cannot reach the server.",
+      "no_meters": "No meter detected on this account.",
+      "unknown": "Unexpected error. Check the logs."
+    },
+    "abort": {
+      "already_configured": "This meter is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "index": { "name": "Index" },
+      "consumption_today": { "name": "Consumption today" },
+      "consumption_average": { "name": "Average consumption" },
+      "threshold_high": { "name": "High alert threshold" },
+      "threshold_low": { "name": "Low alert threshold" }
+    }
+  }
+}
