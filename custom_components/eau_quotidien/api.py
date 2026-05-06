@@ -131,6 +131,13 @@ class EauQuotidienClient:
         html = await self._get_meter_html(meter_id)
         return self._parse_html(html)
 
+    async def get_meter_data_for_month(
+        self, meter_id: int, year_month: str
+    ) -> dict[str, Any]:
+        """Récupère les données pour un mois donné (format YYYYMM)."""
+        html = await self._get_meter_html(meter_id, date=year_month)
+        return self._parse_html(html)
+
     async def discover_meters(self) -> list[int]:
         """Découvre les IDs des compteurs accessibles au compte courant.
 

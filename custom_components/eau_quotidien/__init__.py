@@ -1,6 +1,7 @@
 """Intégration Eau Quotidien (Nogema) pour Home Assistant."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import aiohttp
@@ -41,6 +42,10 @@ async def async_setup_entry(
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Importer l'historique en arrière-plan (une seule fois)
+    asyncio.create_task(coordinator.async_import_historical_stats())
+
     return True
 
 
