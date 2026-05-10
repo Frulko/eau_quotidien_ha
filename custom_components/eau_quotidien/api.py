@@ -72,6 +72,7 @@ class EauQuotidienClient:
                     "origin": self._base,
                     "accept": "*/*",
                 },
+                timeout=aiohttp.ClientTimeout(total=30),
             ) as resp:
                 if resp.status not in (200, 204, 302):
                     raise AuthError(f"Login refusé (HTTP {resp.status})")
@@ -104,6 +105,7 @@ class EauQuotidienClient:
             async with self._session.get(
                 url,
                 headers={"x-requested-with": "KnNav", "accept": "*/*"},
+                timeout=aiohttp.ClientTimeout(total=30),
             ) as resp:
                 return await resp.text()
 
@@ -177,10 +179,12 @@ class EauQuotidienClient:
                 rf"{key}\s*:\s*JSON\.parse\('([^']*)'\)", html
             )
             if not m:
+                _LOGGER.debug("Bloc JSON.parse introuvable pour la clé '%s'", key)
                 return None
             try:
                 return json.loads(m.group(1))
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as err:
+                _LOGGER.debug("Échec du parsing JSON pour '%s': %s", key, err)
                 return None
 
         data: dict[str, Any] = {
@@ -198,6 +202,8 @@ class EauQuotidienClient:
             m = re.search(regex, html)
             if m:
                 data[field] = int(m.group(1))
+            else:
+                _LOGGER.debug("Champ scalaire '%s' introuvable dans le HTML", field)
 
         if data["reads"]:
             data["latest"] = data["reads"][0]

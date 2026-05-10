@@ -6,6 +6,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import (
@@ -52,17 +54,23 @@ class EauQuotidienCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (CommunicationError, MeterNotFoundError) as err:
             raise UpdateFailed(str(err)) from err
 
-    async def async_import_historical_stats(self) -> None:
+    async def async_import_historical_stats(self, entry: ConfigEntry) -> None:
         """Importe l'historique des relevés horaires dans les statistiques HA.
 
-        Ne s'exécute qu'une seule fois par compteur.
+        Ne s'exécute qu'une seule fois par compteur (flag persisté dans entry.options).
         """
         flag_key = f"history_imported_{self.meter_id}"
-        if self.hass.data.get(DOMAIN, {}).get(flag_key):
+        if entry.options.get(flag_key):
             return
 
         # Attendre que HA soit complètement démarré et que le recorder soit prêt
-        await asyncio.sleep(30)
+        if not self.hass.is_running:
+            started = asyncio.Event()
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED,
+                lambda _: started.set(),
+            )
+            await started.wait()
 
         # Récupérer le vrai entity_id du sensor via le registry
         registry = er.async_get(self.hass)
@@ -161,7 +169,7 @@ class EauQuotidienCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 {
                     "statistic_id": statistic_id,
                     "source": "recorder",
-                    "unit_of_measurement": "m³",
+                    "unit_of_measurement": "L",
                     "has_mean": False,
                     "has_sum": True,
                     "stats": stats,
@@ -169,7 +177,10 @@ class EauQuotidienCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 blocking=True,
             )
 
-            self.hass.data.setdefault(DOMAIN, {})[flag_key] = True
+            self.hass.config_entries.async_update_entry(
+                entry,
+                options={**entry.options, flag_key: True},
+            )
             _LOGGER.info(
                 "Historique importé avec succès: %d points pour %s",
                 len(stats),
@@ -181,7 +192,11 @@ class EauQuotidienCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @staticmethod
     def _parse_reading_date(dt_str: str) -> datetime | None:
-        """Parse une date de relevé (YYYY-MM-DD ou YYYY-MM-DD HH:MM:SS)."""
+        """Parse une date de relevé (YYYY-MM-DD ou YYYY-MM-DD HH:MM:SS).
+
+        Les dates de Nogema sont en heure locale française — on les traite
+        comme heure locale HA avant conversion UTC pour éviter un décalage.
+        """
         formats = [
             "%Y-%m-%d",
             "%Y-%m-%d %H:%M:%S",
@@ -189,7 +204,8 @@ class EauQuotidienCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for fmt in formats:
             try:
                 parsed = datetime.strptime(dt_str, fmt)
-                return dt_util.as_utc(parsed)
+                return dt_util.as_utc(dt_util.as_local(parsed))
             except ValueError:
                 continue
+        _LOGGER.debug("Format de date non reconnu : %r", dt_str)
         return None
